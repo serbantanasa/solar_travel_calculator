@@ -41,6 +41,7 @@ pub(super) fn solve(
             propellant_used_kg: Some(0.0),
             departure_state,
             arrival_state,
+            peak_speed_km_s: Some(0.0),
         });
     }
 
@@ -67,6 +68,7 @@ pub(super) fn solve(
 
     let mut x = 0.0;
     let mut v = vector_dot(&departure_state.velocity_km_s, &direction);
+    let mut peak_speed = v.abs();
     let mut time = 0.0;
 
     for step in 0..steps {
@@ -84,6 +86,7 @@ pub(super) fn solve(
         let total_accel = a_thrust + a_grav;
 
         v += total_accel * dt;
+        peak_speed = peak_speed.max(v.abs());
         x += v * dt;
 
         if x < 0.0 {
@@ -117,6 +120,7 @@ pub(super) fn solve(
         propellant_used_kg: Some(propellant_used),
         departure_state,
         arrival_state,
+        peak_speed_km_s: Some(peak_speed.abs()),
     })
 }
 

@@ -64,9 +64,13 @@ pub fn plan_arrival(
     let parking_radius = destination.radius_km + config.target_parking_altitude_km;
     let circular_speed = (destination.mu_km3_s2 / parking_radius).sqrt();
 
-    let departure_et = ephemeris::epoch_seconds(&cruise_config.departure_epoch)?;
-    let arrival_et = ephemeris::epoch_seconds(&config.encounter_epoch)?;
-    let tof_seconds = (arrival_et - departure_et).abs().max(1.0);
+    let tof_seconds = if let Some(arrival_epoch) = &cruise_config.arrival_epoch {
+        let departure_et = ephemeris::epoch_seconds(&cruise_config.departure_epoch)?;
+        let arrival_et = ephemeris::epoch_seconds(arrival_epoch)?;
+        (arrival_et - departure_et).abs().max(1.0)
+    } else {
+        cruise.time_of_flight_days * 86_400.0
+    };
 
     let lambert_result = lambert::solve(
         cruise.departure_state.position_km,

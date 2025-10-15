@@ -24,6 +24,7 @@ pub struct InterplanetaryPlan {
     pub propellant_used_kg: Option<f64>,
     pub departure_state: StateVector,
     pub arrival_state: StateVector,
+    pub peak_speed_km_s: Option<f64>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -65,6 +66,7 @@ pub fn plan_interplanetary(
             propellant_used_kg: None,
             departure_state,
             arrival_state,
+            peak_speed_km_s: None,
         }),
     }
 }

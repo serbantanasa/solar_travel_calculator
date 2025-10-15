@@ -5,8 +5,8 @@ use std::fs;
 use std::path::PathBuf;
 
 use cspice_sys::{
-    SpiceBoolean, SpiceDouble, SpiceInt, erract_c, failed_c, furnsh_c, getmsg_c, kclear_c, reset_c,
-    spkezr_c, str2et_c,
+    SpiceBoolean, SpiceDouble, SpiceInt, erract_c, et2utc_c, failed_c, furnsh_c, getmsg_c,
+    kclear_c, reset_c, spkezr_c, str2et_c,
 };
 use thiserror::Error;
 
@@ -130,6 +130,25 @@ pub fn epoch_seconds(epoch: &str) -> Result<f64, EphemerisError> {
     }
     check_for_spice_error()?;
     Ok(et)
+}
+
+/// Format an ephemeris time (seconds past J2000) into a UTC calendar string.
+pub fn format_epoch(et: f64) -> Result<String, EphemerisError> {
+    load_default_kernels()?;
+    let mut buffer = vec![0i8; 64];
+    let fmt = CString::new("C").unwrap();
+    unsafe {
+        et2utc_c(
+            et,
+            fmt.as_ptr() as *mut i8,
+            3,
+            buffer.len() as SpiceInt,
+            buffer.as_mut_ptr(),
+        );
+    }
+    check_for_spice_error()?;
+    let c_str = unsafe { CStr::from_ptr(buffer.as_ptr()) };
+    Ok(c_str.to_string_lossy().trim().to_string())
 }
 
 fn initialize_spice() -> Result<(), EphemerisError> {

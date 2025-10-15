@@ -1,4 +1,5 @@
 use clap::{Parser, ValueEnum};
+use solar_travel_calculator::ephemeris;
 use solar_travel_calculator::mission::arrival::AerobrakingOption;
 use solar_travel_calculator::mission::departure::DepartureConfig;
 use solar_travel_calculator::mission::interplanetary::InterplanetaryConfig;
@@ -108,17 +109,48 @@ fn main() -> anyhow::Result<()> {
 
     let profile = plan_mission(mission_config)?;
 
+    let departure_et = ephemeris::epoch_seconds(&cli.depart)?;
+    let arrival_et = if let Some(arrive) = &cli.arrive {
+        ephemeris::epoch_seconds(arrive)?
+    } else {
+        departure_et + profile.cruise.time_of_flight_days * 86_400.0
+    };
+    let arrival_epoch_str = ephemeris::format_epoch(arrival_et)?;
+
+    let duration_seconds = profile.cruise.time_of_flight_days * 86_400.0;
+    let (d, h, m) = format_duration(duration_seconds);
+
+    let depart_speed = vector_norm(&profile.cruise.departure_state.velocity_km_s);
+    let arrive_speed = vector_norm(&profile.cruise.arrival_state.velocity_km_s);
+    let peak_speed = profile
+        .cruise
+        .peak_speed_km_s
+        .unwrap_or(depart_speed.max(arrive_speed));
+    let percent_c = peak_speed / 299_792.458 * 100.0;
+
     println!("=== Mission Profile ===");
+    println!("Departure epoch : {}", cli.depart);
+    println!("Arrival epoch   : {}", arrival_epoch_str);
     println!(
-        "Departure: Δv = {:.3} km/s, v_inf = {:.3} km/s",
+        "Departure burn : Δv = {:.3} km/s, v_inf = {:.3} km/s",
         profile.departure.delta_v_required, profile.departure.hyperbolic_excess_km_s
     );
     println!(
-        "Cruise: TOF = {:.1} days, propellant used = {:.1} kg",
+        "Cruise         : TOF = {:.2} days ({}d {}h {}m), propellant used = {:.1} kg",
         profile.cruise.time_of_flight_days,
+        d,
+        h,
+        m,
         profile.cruise.propellant_used_kg.unwrap_or(0.0)
     );
-    println!("Arrival: Δv = {:.3} km/s", profile.arrival.delta_v_required);
+    println!(
+        "Speeds         : start = {:.3} km/s, peak = {:.3} km/s ({:.6}% c), arrival = {:.3} km/s",
+        depart_speed, peak_speed, percent_c, arrive_speed
+    );
+    println!(
+        "Arrival burn   : Δv = {:.3} km/s",
+        profile.arrival.delta_v_required
+    );
 
     Ok(())
 }
@@ -158,4 +190,17 @@ fn choose_vehicle(
             .cloned()
             .ok_or_else(|| anyhow::anyhow!("No continuous-thrust vehicle in scenarios"))
     }
+}
+
+fn format_duration(seconds: f64) -> (i64, i64, i64) {
+    let total_seconds = seconds.max(0.0);
+    let days = (total_seconds / 86_400.0).floor() as i64;
+    let remaining = total_seconds - (days as f64 * 86_400.0);
+    let hours = (remaining / 3_600.0).floor() as i64;
+    let minutes = ((remaining - hours as f64 * 3_600.0) / 60.0).floor() as i64;
+    (days, hours, minutes)
+}
+
+fn vector_norm(v: &[f64; 3]) -> f64 {
+    (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt()
 }
