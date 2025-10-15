@@ -68,9 +68,9 @@
 
 ## 8. Roadmap
 1. **v0.1 — Impulsive Core (in progress)**
-   - [ ] Implement celestial body catalog and analytic ephemeris helpers.
-   - [ ] Add Lambert/Hohmann solver and CLI `plan` command.
-   - [ ] Write regression tests for Earth↔Mars / Earth↔Venus impulsive transfers.
+   - [x] Implement celestial body catalog (scenario YAML) and analytic helpers for SPICE access.
+   - [x] Add Lambert solver and mission CLI (`cargo run --bin mission`).
+   - [ ] Write regression tests for Earth↔Mars / Earth↔Venus impulsive (Lambert) transfers.
 2. **v0.2 — SPICE Integration (partially complete)**
    - [x] Download baseline SPICE kernels and expose `state_vector`.
    - [x] Add ephemeris-driven integration tests.
