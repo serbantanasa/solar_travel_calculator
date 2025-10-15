@@ -7,6 +7,9 @@ fn scenario_catalog_contains_major_bodies() {
     assert!(planets.iter().any(|p| p.name == "JUPITER"));
     assert!(planets.iter().any(|p| p.name == "PLUTO"));
     assert!(planets.iter().any(|p| p.name == "TITAN"));
+    let earth = planets.iter().find(|p| p.name == "EARTH").unwrap();
+    assert!(earth.surface_gravity_m_s2 > 9.7 && earth.surface_gravity_m_s2 < 10.0);
+    assert!(earth.mass_kg > 5.9e24 && earth.mass_kg < 6.1e24);
 }
 
 #[test]

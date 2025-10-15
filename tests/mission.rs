@@ -37,7 +37,11 @@ fn stub_mission_planner_runs() {
     let vehicles = load_vehicles("data/scenarios/vehicles.yaml").expect("vehicles yaml");
     let origin = planets.iter().find(|p| p.name == "EARTH").unwrap().clone();
     let destination = planets.iter().find(|p| p.name == "MARS").unwrap().clone();
-    let scenario_vehicle = vehicles.first().cloned().unwrap();
+    let scenario_vehicle = vehicles
+        .iter()
+        .find(|v| v.name.contains("Ion"))
+        .unwrap()
+        .clone();
     let propulsion_mode = scenario_vehicle.propulsion.clone();
 
     let departure = DepartureConfig {

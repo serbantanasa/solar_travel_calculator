@@ -14,6 +14,8 @@ pub struct PlanetConfig {
     pub radius_km: f64,
     pub soi_radius_km: f64,
     pub default_parking_altitude_km: f64,
+    pub surface_gravity_m_s2: f64,
+    pub mass_kg: f64,
     pub atmosphere: Option<AtmosphereConfig>,
 }
 

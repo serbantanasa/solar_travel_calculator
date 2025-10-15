@@ -36,7 +36,7 @@ fn earth_mars_setup() -> (
     let destination = planets.iter().find(|p| p.name == "MARS").unwrap().clone();
     let vehicle = vehicles
         .iter()
-        .find(|v| v.name.starts_with("Starship"))
+        .find(|v| v.name.contains("Ion"))
         .unwrap()
         .clone();
     let propulsion_mode = vehicle.propulsion.clone();

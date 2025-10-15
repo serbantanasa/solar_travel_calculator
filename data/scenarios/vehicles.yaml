@@ -2,10 +2,8 @@
   dry_mass_kg: 120000.0
   propellant_mass_kg: 1000000.0
   propulsion:
-    type: continuous
-    max_thrust_newtons: 2000000.0
-    isp_seconds: 450.0
-    max_acceleration_m_s2: 7.0
+    type: impulsive
+    max_delta_v_km_s: 6.5
 - name: Ion Tug Mk1
   dry_mass_kg: 20000.0
   propellant_mass_kg: 80000.0
