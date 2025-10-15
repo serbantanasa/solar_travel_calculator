@@ -3,6 +3,8 @@ use clap::Parser;
 use csv::ReaderBuilder;
 use plotters::coord::types::RangedCoordf64;
 use plotters::prelude::*;
+use std::fs;
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -13,8 +15,8 @@ use plotters::prelude::*;
 struct Cli {
     #[arg(long)]
     input: String,
-    #[arg(long)]
-    output: String,
+    #[arg(long, default_value = "artifacts/pork.png")]
+    output: PathBuf,
     #[arg(long, default_value = "dv_total_km_s")]
     metric: String,
     #[arg(long, default_value_t = 1200)]
@@ -55,7 +57,16 @@ fn main() -> anyhow::Result<()> {
         ));
     }
 
-    let root = BitMapBackend::new(&cli.output, (cli.width, cli.height)).into_drawing_area();
+    if let Some(parent) = cli.output.parent() {
+        if !parent.as_os_str().is_empty() {
+            fs::create_dir_all(parent)?;
+        }
+    }
+    let output_str = cli
+        .output
+        .to_str()
+        .ok_or_else(|| anyhow::anyhow!("Output path contains invalid UTF-8"))?;
+    let root = BitMapBackend::new(output_str, (cli.width, cli.height)).into_drawing_area();
     root.fill(&WHITE)?;
 
     let et_depart_min = *dep_vals.first().expect("depart range");
@@ -101,8 +112,8 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    let (min_dep_idx, min_arr_idx) = min_pos
-        .ok_or_else(|| anyhow::anyhow!("No feasible entries in the provided CSV"))?;
+    let (min_dep_idx, min_arr_idx) =
+        min_pos.ok_or_else(|| anyhow::anyhow!("No feasible entries in the provided CSV"))?;
     if !max_value.is_finite() {
         max_value = min_value;
     }
@@ -273,12 +284,8 @@ fn read_cells(
         .iter()
         .position(|h| h.eq_ignore_ascii_case("feasible"))
         .ok_or_else(|| anyhow::anyhow!("CSV missing 'feasible' column"))?;
-    let metric_idx = resolve_metric_column(&headers, metric_name).ok_or_else(|| {
-        anyhow::anyhow!(
-            "CSV missing metric column matching '{}'",
-            metric_name
-        )
-    })?;
+    let metric_idx = resolve_metric_column(&headers, metric_name)
+        .ok_or_else(|| anyhow::anyhow!("CSV missing metric column matching '{}'", metric_name))?;
     let metric_column = headers
         .get(metric_idx)
         .map(|s| s.to_string())
@@ -289,25 +296,13 @@ fn read_cells(
     let mut arr_vals = Vec::new();
     for rec in rdr.records() {
         let r = rec?;
-        let depart_et: f64 = r
-            .get(depart_idx)
-            .unwrap_or("")
-            .parse()
-            .unwrap_or(f64::NAN);
-        let arrive_et: f64 = r
-            .get(arrive_idx)
-            .unwrap_or("")
-            .parse()
-            .unwrap_or(f64::NAN);
+        let depart_et: f64 = r.get(depart_idx).unwrap_or("").parse().unwrap_or(f64::NAN);
+        let arrive_et: f64 = r.get(arrive_idx).unwrap_or("").parse().unwrap_or(f64::NAN);
         let feasible = r
             .get(feasible_idx)
             .unwrap_or("false")
             .eq_ignore_ascii_case("true");
-        let metric_value: f64 = r
-            .get(metric_idx)
-            .unwrap_or("")
-            .parse()
-            .unwrap_or(f64::NAN);
+        let metric_value: f64 = r.get(metric_idx).unwrap_or("").parse().unwrap_or(f64::NAN);
         if depart_et.is_finite() && arrive_et.is_finite() {
             if feasible && metric_value.is_finite() {
                 dep_vals.push(depart_et);
@@ -347,13 +342,11 @@ fn jet_color(t_in: f64) -> RGBColor {
 fn build_grid(cells: &[Cell], dep_vals: &[f64], arr_vals: &[f64]) -> Vec<Vec<f64>> {
     let mut grid = vec![vec![f64::NAN; dep_vals.len()]; arr_vals.len()];
     for cell in cells {
-        let dep_idx = match dep_vals.binary_search_by(|x| x.partial_cmp(&cell.depart_et).unwrap())
-        {
+        let dep_idx = match dep_vals.binary_search_by(|x| x.partial_cmp(&cell.depart_et).unwrap()) {
             Ok(idx) => idx,
             Err(_) => continue,
         };
-        let arr_idx = match arr_vals.binary_search_by(|x| x.partial_cmp(&cell.arrive_et).unwrap())
-        {
+        let arr_idx = match arr_vals.binary_search_by(|x| x.partial_cmp(&cell.arrive_et).unwrap()) {
             Ok(idx) => idx,
             Err(_) => continue,
         };
