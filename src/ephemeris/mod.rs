@@ -43,6 +43,8 @@ pub enum EphemerisError {
         #[source]
         source: std::io::Error,
     },
+    #[error("invalid epoch string `{epoch}`")]
+    InvalidEpoch { epoch: String },
     #[error("SPICE kernel call failed: {message}")]
     Spice { message: String },
 }
@@ -114,6 +116,20 @@ pub fn state_vector(
         velocity_km_s: [state[3], state[4], state[5]],
         light_time_seconds: light_time,
     })
+}
+
+/// Convert a time string understood by SPICE into ephemeris seconds past J2000.
+pub fn epoch_seconds(epoch: &str) -> Result<f64, EphemerisError> {
+    load_default_kernels()?;
+    let epoch_c = CString::new(epoch).map_err(|_| EphemerisError::InvalidEpoch {
+        epoch: epoch.to_string(),
+    })?;
+    let mut et = 0.0;
+    unsafe {
+        str2et_c(epoch_c.as_ptr() as *mut i8, &mut et);
+    }
+    check_for_spice_error()?;
+    Ok(et)
 }
 
 fn initialize_spice() -> Result<(), EphemerisError> {

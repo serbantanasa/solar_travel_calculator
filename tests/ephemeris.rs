@@ -1,8 +1,8 @@
 use std::sync::{Mutex, OnceLock};
 
 use solar_travel_calculator::ephemeris;
-use solar_travel_calculator::ephemeris::kernels::KERNEL_CATALOG;
 use solar_travel_calculator::ephemeris::EphemerisError;
+use solar_travel_calculator::ephemeris::kernels::KERNEL_CATALOG;
 
 const SPEED_OF_LIGHT_KM_S: f64 = 299_792.458;
 const AU_KM: f64 = 149_597_870.7;
@@ -68,7 +68,7 @@ fn earth_heliocentric_state_vector_is_reasonable() {
     let distance = (state.position_km[0].powi(2)
         + state.position_km[1].powi(2)
         + state.position_km[2].powi(2))
-        .sqrt();
+    .sqrt();
     assert!(
         (AU_KM * 0.95..=AU_KM * 1.05).contains(&distance),
         "Earth-Sun distance should be ~1 AU (got {distance} km)"
@@ -77,7 +77,7 @@ fn earth_heliocentric_state_vector_is_reasonable() {
     let speed = (state.velocity_km_s[0].powi(2)
         + state.velocity_km_s[1].powi(2)
         + state.velocity_km_s[2].powi(2))
-        .sqrt();
+    .sqrt();
     assert!(
         (25.0..=40.0).contains(&speed),
         "Earth heliocentric speed should be ~30 km/s (got {speed} km/s)"

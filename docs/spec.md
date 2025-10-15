@@ -40,12 +40,13 @@
   - `astro::ephemeris`: Trait-based loader supporting SPICE binary kernels and analytic approximations.
   - `dynamics`: State propagation utilities (Keplerian propagation, Lambert solver wrapper, thrust integration).
   - `optimizer`: Abstractions for search algorithms (grid scan, particle swarm, direct collocation).
-  - `mission`: High-level orchestration tying vehicle models, trajectories, constraints, and output products.
+  - `mission`: High-level orchestration tying vehicle models, trajectories, constraints, and output products. Current scaffold sequences departure, interplanetary, and arrival legs so we can plug in impulsive or continuous propulsion models incrementally.
 - **CLI (`src/main.rs` & `src/bin/`)**
   - Command groups: `plan` (single transfer), `scan` (window analysis), `simulate` (time-stepped propagation), `export` (trajectory to CSV/JSON).
   - Flags to inject alternative ephemeris sets, solver tolerances, and output formatting.
 - **Data Layer (`data/`)**
   - Example mission configs (Earth→Mars Hohmann, Earth→Saturn brachistochrone).
+  - Scenario catalogs for planets, moons, dwarf planets, and vehicle presets (including speculative drives).
   - Placeholder ephemeris data for offline development.
 - **Testing (`tests/` and inline unit tests)**
   - Integration tests that execute CLI scenarios via `assert_cmd`.
@@ -53,7 +54,6 @@
 
 ## 6. External Dependencies (Initial)
 - `nalgebra` or `ndarray` for vector math and matrices.
-- `hifitime` or `chrono` for precise time handling compatible with SPICE.
 - `clap` for CLI parsing.
 - `serde` + `serde_yaml`/`toml` for scenario serialization.
 - `thiserror` for structured error handling.
@@ -67,18 +67,21 @@
 - **Continuous integration**: Run `cargo fmt`, `cargo clippy`, and `cargo test --all-features`; stage SPICE-dependent tests behind feature flags to keep CI lightweight.
 
 ## 8. Roadmap
-1. **v0.1 — Impulsive Core**
-   - Implement celestial body catalog, SPICE-less analytic ephemeris, Lambert solver integration, and CLI `plan` command.
-   - Add unit/integration tests around Earth↔Mars and Earth↔Venus transfers.
-2. **v0.2 — SPICE Integration**
-   - Enable SPICE kernel ingestion, time conversions, and window scanning.
-   - Introduce regression fixtures from real mission data (e.g., NASA's reference trajectories).
+1. **v0.1 — Impulsive Core (in progress)**
+   - [ ] Implement celestial body catalog and analytic ephemeris helpers.
+   - [ ] Add Lambert/Hohmann solver and CLI `plan` command.
+   - [ ] Write regression tests for Earth↔Mars / Earth↔Venus impulsive transfers.
+2. **v0.2 — SPICE Integration (partially complete)**
+   - [x] Download baseline SPICE kernels and expose `state_vector`.
+   - [x] Add ephemeris-driven integration tests.
+   - [ ] Implement time conversions and window scanning utilities.
 3. **v0.3 — Continuous-Thrust Prototype**
-   - Add thrust profile integrator, brachistochrone approximations, and vehicle models with propellant tracking.
-   - Validate against theoretical brachistochrone times and compare with high-Isp concept studies.[1][5]
+   - [x] Add thrust profile integrator (RK-based) with mass-flow coupling.
+   - [ ] Validate continuous solutions against analytic brachistochrone cases.
+   - [x] Integrate vehicle propulsion models (chemical, ion, nuclear) with mission phases.
 4. **v0.4+ — Advanced Optimization**
-   - Multi-leg itineraries, flyby search, and user-defined objective functions.
-   - Potential GUI or web bindings leveraging the core library.
+   - [ ] Search over multi-leg itineraries and planetary flybys.
+   - [ ] Expose user-defined objectives/constraints and possibly GUI/web frontends.
 
 ## 9. Open Questions and Risks
 - **Ephemeris licensing and distribution**: Determine which SPICE kernels can be redistributed or whether the app should download them on demand.

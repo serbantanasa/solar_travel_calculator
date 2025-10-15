@@ -1,0 +1,29 @@
+- name: Starship V4 Concept
+  dry_mass_kg: 120000.0
+  propellant_mass_kg: 1000000.0
+  propulsion:
+    type: continuous
+    max_thrust_newtons: 2000000.0
+    isp_seconds: 450.0
+    max_acceleration_m_s2: 7.0
+- name: Ion Tug Mk1
+  dry_mass_kg: 20000.0
+  propellant_mass_kg: 80000.0
+  propulsion:
+    type: continuous
+    max_thrust_newtons: 3000.0
+    isp_seconds: 4000.0
+- name: Chemical Upper Stage
+  dry_mass_kg: 10000.0
+  propellant_mass_kg: 60000.0
+  propulsion:
+    type: impulsive
+    max_delta_v_km_s: 4.5
+- name: Epstein Torch Drive
+  dry_mass_kg: 150000.0
+  propellant_mass_kg: 2500000.0
+  propulsion:
+    type: continuous
+    max_thrust_newtons: 1000000.0
+    isp_seconds: 1100000.0
+    max_acceleration_m_s2: 68.0
