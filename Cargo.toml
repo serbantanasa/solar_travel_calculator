@@ -2,6 +2,8 @@
 name = "solar_travel_calculator"
 version = "0.1.0"
 edition = "2024"
+license = "Unlicense"
+readme = "README.md"
 
 [dependencies]
 cspice-sys = { version = "1.0.4", features = ["downloadcspice"] }

@@ -14,3 +14,9 @@ This project explores brachistochrone-style optimal trajectories within the Sola
 
 ## Contributing
 Development is just beginning—feel free to open issues or propose enhancements as the modeling and tooling take shape.
+
+## Acknowledgements
+- This project uses NASA's [Navigation and Ancillary Information Facility (NAIF) SPICE system](https://naif.jpl.nasa.gov/naif/) for ephemeris data; see the NAIF site for usage rules and credit guidance.
+
+## License
+Code in this repository is released under the [Unlicense](LICENSE); you may use it without restriction. NASA's SPICE toolkit and kernels retain their original terms—see [docs/LICENSING.md](docs/LICENSING.md) for details.
