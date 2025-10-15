@@ -79,6 +79,11 @@
    - [x] Add thrust profile integrator (RK-based) with mass-flow coupling.
    - [ ] Validate continuous solutions against analytic brachistochrone cases.
    - [x] Integrate vehicle propulsion models (chemical, ion, nuclear) with mission phases.
+   - [ ] Replace straight-line cruise model with full heliocentric propagation:
+     - Implement a 3D state integrator that propagates spacecraft motion while the target body moves on its ephemeris.
+     - Introduce thrust steering logic (accel/decel and lateral guidance) appropriate for low-thrust optimisation.
+     - Provide target-tracking logic so the integrator converges on the moving destination state.
+     - Derive finite-burn durations from thrust and mass-flow to report accurate burn times in the CLI.
 4. **v0.4+ — Advanced Optimization**
    - [ ] Search over multi-leg itineraries and planetary flybys.
    - [ ] Expose user-defined objectives/constraints and possibly GUI/web frontends.
