@@ -1,0 +1,13 @@
+name = "EARTH"
+spice_name = "EARTH BARYCENTER"
+mu_km3_s2 = 398600.4418
+radius_km = 6378.1363
+soi_radius_km = 924000.0
+default_parking_altitude_km = 400.0
+surface_gravity_m_s2 = 9.80665
+mass_kg = 5.97219e+24
+
+[atmosphere]
+exists = true
+scale_height_km = 8.5
+surface_density_kg_m3 = 1.225

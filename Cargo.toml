@@ -1,3 +1,32 @@
+[workspace]
+members = [
+    ".",
+    "crates/core",
+    "crates/ephem_spice",
+    "crates/config",
+    "crates/export",
+    "crates/transfer",
+    "crates/impulsive",
+    "crates/lowthrust",
+    "crates/propulsion",
+    "crates/importer",
+    "crates/orbits",
+    "crates/cli",
+]
+resolver = "2"
+
+[workspace.dependencies]
+solar_core = { path = "crates/core" }
+solar_ephem_spice = { path = "crates/ephem_spice" }
+solar_config = { path = "crates/config" }
+solar_export = { path = "crates/export" }
+solar_transfer = { path = "crates/transfer" }
+solar_impulsive = { path = "crates/impulsive" }
+solar_lowthrust = { path = "crates/lowthrust" }
+solar_propulsion = { path = "crates/propulsion" }
+solar_importer = { path = "crates/importer" }
+solar_orbits = { path = "crates/orbits" }
+
 [package]
 name = "solar_travel_calculator"
 version = "0.1.0"
@@ -6,15 +35,25 @@ license = "Unlicense"
 readme = "README.md"
 
 [dependencies]
-cspice-sys = { version = "1.0.4", features = ["downloadcspice"] }
-reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
 thiserror = "2.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_yaml = "0.9"
-clap = { version = "4.5", features = ["derive"] }
-lambert-bate = "0.1"
-nalgebra = { version = "0.32", default-features = false, features = ["std"] }
-anyhow = "1.0"
+csv = "1.3"
+plotters = { version = "0.3", default-features = false, features = ["bitmap_backend", "bitmap_encoder", "ttf"] }
+chrono = { version = "0.4.42", default-features = false, features = ["clock"] }
+solar_core = { workspace = true }
+solar_ephem_spice = { workspace = true }
+solar_config = { workspace = true }
+solar_export = { workspace = true }
+solar_transfer = { workspace = true }
+solar_impulsive = { workspace = true }
+solar_lowthrust = { workspace = true }
+solar_propulsion = { workspace = true }
+solar_importer = { workspace = true }
+solar_orbits = { workspace = true }
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.1"
+tempfile = "3.10"
 
 [patch.crates-io]
 cspice-sys = { path = "vendor/cspice-sys" }

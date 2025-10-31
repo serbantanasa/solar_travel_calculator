@@ -1,0 +1,9 @@
+name = "Starship V4 Concept"
+dry_mass_kg = 120000.0
+propellant_mass_kg = 1000000.0
+
+[propulsion]
+type = "impulsive"
+max_delta_v_km_s = 6.5
+isp_seconds = 375.0
+max_thrust_newtons = 7600000.0

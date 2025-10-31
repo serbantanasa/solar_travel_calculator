@@ -1,0 +1,13 @@
+name = "SATURN"
+spice_name = "SATURN BARYCENTER"
+mu_km3_s2 = 37931207.8
+radius_km = 58232.0
+soi_radius_km = 54800000.0
+default_parking_altitude_km = 1200.0
+surface_gravity_m_s2 = 10.44
+mass_kg = 5.6834e+26
+
+[atmosphere]
+exists = true
+scale_height_km = 59.5
+surface_density_kg_m3 = 0.19

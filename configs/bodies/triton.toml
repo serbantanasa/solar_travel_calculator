@@ -1,0 +1,14 @@
+name = "TRITON"
+spice_name = "TRITON"
+parent_spice = "NEPTUNE BARYCENTER"
+mu_km3_s2 = 1427.6
+radius_km = 1353.4
+soi_radius_km = 135000.0
+default_parking_altitude_km = 80.0
+surface_gravity_m_s2 = 0.779
+mass_kg = 2.14e+22
+
+[atmosphere]
+exists = true
+scale_height_km = 14.0
+surface_density_kg_m3 = 0.0004

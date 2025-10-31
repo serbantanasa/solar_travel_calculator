@@ -1,0 +1,10 @@
+[package]
+name = "solar_ephem_spice"
+version = "0.1.0"
+edition = "2024"
+license = "Unlicense"
+description = "SPICE kernel loading and ephemeris sampling for the Solar Travel Calculator workspace"
+
+[dependencies]
+thiserror = "2.0"
+cspice-sys = { version = "1.0.4", features = ["downloadcspice"] }

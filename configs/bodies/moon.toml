@@ -1,0 +1,14 @@
+name = "MOON"
+spice_name = "MOON"
+parent_spice = "EARTH BARYCENTER"
+mu_km3_s2 = 4902.800066
+radius_km = 1737.4
+soi_radius_km = 66000.0
+default_parking_altitude_km = 100.0
+surface_gravity_m_s2 = 1.62
+mass_kg = 7.342e+22
+
+[atmosphere]
+exists = false
+scale_height_km = 0.0
+surface_density_kg_m3 = 0.0

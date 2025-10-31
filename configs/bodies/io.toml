@@ -1,0 +1,14 @@
+name = "IO"
+spice_name = "IO"
+parent_spice = "JUPITER BARYCENTER"
+mu_km3_s2 = 5959.916
+radius_km = 1821.6
+soi_radius_km = 90600.0
+default_parking_altitude_km = 75.0
+surface_gravity_m_s2 = 1.796
+mass_kg = 8.93e+22
+
+[atmosphere]
+exists = false
+scale_height_km = 0.0
+surface_density_kg_m3 = 0.0

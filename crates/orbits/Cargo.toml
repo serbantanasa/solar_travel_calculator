@@ -1,0 +1,9 @@
+[package]
+name = "solar_orbits"
+version = "0.1.0"
+edition = "2024"
+license = "Unlicense"
+description = "Orbit utility helpers for patched-conic calculations"
+
+[dependencies]
+solar_core = { path = "../core" }

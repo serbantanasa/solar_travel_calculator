@@ -1,0 +1,14 @@
+name = "ENCELADUS"
+spice_name = "ENCELADUS"
+parent_spice = "SATURN BARYCENTER"
+mu_km3_s2 = 7.21
+radius_km = 252.1
+soi_radius_km = 23000.0
+default_parking_altitude_km = 30.0
+surface_gravity_m_s2 = 0.113
+mass_kg = 1.08e+20
+
+[atmosphere]
+exists = false
+scale_height_km = 0.0
+surface_density_kg_m3 = 0.0

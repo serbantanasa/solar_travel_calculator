@@ -1,4 +1,4 @@
-use solar_travel_calculator::dynamics::lambert;
+use solar_travel_calculator::impulsive::lambert;
 
 const MU_SUN: f64 = 1.327_124_400_18e11; // km^3 / s^2
 const AU_KM: f64 = 149_597_870.7; // km

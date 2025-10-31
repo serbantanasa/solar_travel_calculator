@@ -17,7 +17,7 @@ fn ensure_kernels_or_skip() -> Option<()> {
         Ok(()) => Some(()),
         Err(EphemerisError::MissingKernel { path, .. }) => {
             eprintln!(
-                "Skipping ephemeris tests: missing kernel at {}. Run `cargo run --bin fetch_spice` first.",
+                "Skipping ephemeris tests: missing kernel at {}. Run `cargo run -p solar_cli --bin fetch_spice` first.",
                 path.display()
             );
             None
@@ -89,4 +89,29 @@ fn earth_heliocentric_state_vector_is_reasonable() {
         light_time_delta < 1.0,
         "Light time should match distance/c within 1s (delta {light_time_delta})"
     );
+}
+
+#[test]
+fn state_vector_et_matches_string_version() {
+    let _lock = guard().lock().unwrap();
+    if ensure_kernels_or_skip().is_none() {
+        return;
+    }
+
+    let et = ephemeris::epoch_seconds("2024 JAN 01 00:00:00 TDB").expect("epoch");
+    let s1 = ephemeris::state_vector(
+        "EARTH BARYCENTER",
+        "SUN",
+        "ECLIPJ2000",
+        "NONE",
+        "2024 JAN 01 00:00:00 TDB",
+    )
+    .expect("state");
+    let s2 = ephemeris::state_vector_et("EARTH BARYCENTER", "SUN", "ECLIPJ2000", "NONE", et)
+        .expect("state et");
+
+    for i in 0..3 {
+        assert!((s1.position_km[i] - s2.position_km[i]).abs() < 1e-9);
+        assert!((s1.velocity_km_s[i] - s2.velocity_km_s[i]).abs() < 1e-12);
+    }
 }

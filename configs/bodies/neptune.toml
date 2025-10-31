@@ -1,0 +1,13 @@
+name = "NEPTUNE"
+spice_name = "NEPTUNE BARYCENTER"
+mu_km3_s2 = 6836529.0
+radius_km = 24622.0
+soi_radius_km = 8649000.0
+default_parking_altitude_km = 900.0
+surface_gravity_m_s2 = 11.15
+mass_kg = 1.02413e+26
+
+[atmosphere]
+exists = true
+scale_height_km = 19.0
+surface_density_kg_m3 = 0.45

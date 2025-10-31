@@ -1,11 +1,12 @@
 use std::sync::{Mutex, OnceLock};
 
+use solar_travel_calculator::config::{load_planets, load_vehicle_configs};
 use solar_travel_calculator::ephemeris::EphemerisError;
-use solar_travel_calculator::mission::arrival::AerobrakingOption;
+use solar_travel_calculator::mission::arrival::{AerobrakingOption, ArrivalConfig};
 use solar_travel_calculator::mission::departure::DepartureConfig;
 use solar_travel_calculator::mission::interplanetary::InterplanetaryConfig;
-use solar_travel_calculator::mission::{MissionConfig, arrival::ArrivalConfig, plan_mission};
-use solar_travel_calculator::scenario::{load_planets, load_vehicles};
+use solar_travel_calculator::mission::{MissionConfig, plan_mission};
+use solar_travel_calculator::transfer::vehicle;
 
 fn guard() -> &'static Mutex<()> {
     static GUARD: OnceLock<Mutex<()>> = OnceLock::new();
@@ -17,7 +18,7 @@ fn ensure_kernels_or_skip() -> Option<()> {
         Ok(()) => Some(()),
         Err(EphemerisError::MissingKernel { path, .. }) => {
             eprintln!(
-                "Skipping mission test: missing kernel at {}. Run `cargo run --bin fetch_spice` first.",
+                "Skipping mission test: missing kernel at {}. Run `cargo run -p solar_cli --bin fetch_spice` first.",
                 path.display()
             );
             None
@@ -33,8 +34,12 @@ fn stub_mission_planner_runs() {
         return;
     }
 
-    let planets = load_planets("data/scenarios/planets.yaml").expect("planets yaml");
-    let vehicles = load_vehicles("data/scenarios/vehicles.yaml").expect("vehicles yaml");
+    let planets = load_planets("configs/bodies").expect("planets catalog");
+    let vehicles_cfg = load_vehicle_configs("configs/vehicles").expect("vehicles catalog");
+    let vehicles: Vec<_> = vehicles_cfg
+        .iter()
+        .map(|cfg| vehicle::from_config(cfg).expect("convert vehicle"))
+        .collect();
     let origin = planets.iter().find(|p| p.name == "EARTH").unwrap().clone();
     let destination = planets.iter().find(|p| p.name == "MARS").unwrap().clone();
     let scenario_vehicle = vehicles

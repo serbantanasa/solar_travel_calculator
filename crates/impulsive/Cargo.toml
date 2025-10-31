@@ -1,0 +1,10 @@
+[package]
+name = "solar_impulsive"
+version = "0.1.0"
+edition = "2024"
+license = "Unlicense"
+description = "Impulsive transfer utilities (Lambert, Hohmann, bi-elliptic)"
+
+[dependencies]
+lambert-bate = "0.1"
+thiserror = "2.0"

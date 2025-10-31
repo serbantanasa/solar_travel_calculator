@@ -1,0 +1,13 @@
+name = "PALLAS"
+spice_name = "PALLAS"
+mu_km3_s2 = 14.3
+radius_km = 256.0
+soi_radius_km = 70000.0
+default_parking_altitude_km = 30.0
+surface_gravity_m_s2 = 0.28
+mass_kg = 2.11e+20
+
+[atmosphere]
+exists = false
+scale_height_km = 0.0
+surface_density_kg_m3 = 0.0

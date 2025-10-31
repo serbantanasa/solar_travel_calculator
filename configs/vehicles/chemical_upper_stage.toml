@@ -1,0 +1,9 @@
+name = "Chemical Upper Stage"
+dry_mass_kg = 10000.0
+propellant_mass_kg = 60000.0
+
+[propulsion]
+type = "impulsive"
+max_delta_v_km_s = 4.5
+isp_seconds = 320.0
+max_thrust_newtons = 1500000.0

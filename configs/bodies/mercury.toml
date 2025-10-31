@@ -1,0 +1,13 @@
+name = "MERCURY"
+spice_name = "MERCURY BARYCENTER"
+mu_km3_s2 = 22031.86855
+radius_km = 2439.7
+soi_radius_km = 112000.0
+default_parking_altitude_km = 150.0
+surface_gravity_m_s2 = 3.7
+mass_kg = 3.3011e+23
+
+[atmosphere]
+exists = false
+scale_height_km = 0.0
+surface_density_kg_m3 = 0.0

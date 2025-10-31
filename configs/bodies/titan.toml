@@ -1,0 +1,14 @@
+name = "TITAN"
+spice_name = "TITAN"
+parent_spice = "SATURN BARYCENTER"
+mu_km3_s2 = 8978.137
+radius_km = 2574.7
+soi_radius_km = 110000.0
+default_parking_altitude_km = 150.0
+surface_gravity_m_s2 = 1.352
+mass_kg = 1.3452e+23
+
+[atmosphere]
+exists = true
+scale_height_km = 15.0
+surface_density_kg_m3 = 5.3

@@ -1,0 +1,13 @@
+name = "JUPITER"
+spice_name = "JUPITER BARYCENTER"
+mu_km3_s2 = 126686511.0
+radius_km = 69911.0
+soi_radius_km = 48200000.0
+default_parking_altitude_km = 1000.0
+surface_gravity_m_s2 = 24.79
+mass_kg = 1.8982e+27
+
+[atmosphere]
+exists = true
+scale_height_km = 27.0
+surface_density_kg_m3 = 0.16

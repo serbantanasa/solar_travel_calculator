@@ -1,0 +1,9 @@
+name = "Epstein Torch Drive"
+dry_mass_kg = 150000.0
+propellant_mass_kg = 2500000.0
+
+[propulsion]
+type = "continuous"
+max_thrust_newtons = 26000000.0
+isp_seconds = 1100000.0
+max_acceleration_m_s2 = 9.8

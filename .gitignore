@@ -1,2 +1,7 @@
 /target
 data/spice/
+venv/
+.venv/
+artifacts/
+.idea/
+.vscode/

@@ -1,0 +1,10 @@
+[package]
+name = "solar_lowthrust"
+version = "0.1.0"
+edition = "2024"
+license = "Unlicense"
+description = "Continuous-thrust profile utilities"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+solar_core = { path = "../core" }

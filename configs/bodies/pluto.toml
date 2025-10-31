@@ -1,0 +1,13 @@
+name = "PLUTO"
+spice_name = "PLUTO BARYCENTER"
+mu_km3_s2 = 872.4
+radius_km = 1188.3
+soi_radius_km = 50000.0
+default_parking_altitude_km = 100.0
+surface_gravity_m_s2 = 0.62
+mass_kg = 1.303e+22
+
+[atmosphere]
+exists = true
+scale_height_km = 60.0
+surface_density_kg_m3 = 0.0001

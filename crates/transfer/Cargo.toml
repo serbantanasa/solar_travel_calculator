@@ -1,0 +1,17 @@
+[package]
+name = "solar_transfer"
+version = "0.1.0"
+edition = "2024"
+license = "Unlicense"
+description = "Mission planning and transfer utilities for the Solar Travel Calculator"
+
+[dependencies]
+solar_core = { workspace = true }
+solar_ephem_spice = { workspace = true }
+solar_config = { workspace = true }
+solar_export = { workspace = true }
+solar_impulsive = { workspace = true }
+solar_lowthrust = { workspace = true }
+solar_propulsion = { workspace = true }
+solar_orbits = { workspace = true }
+thiserror = "2.0"

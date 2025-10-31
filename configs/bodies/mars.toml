@@ -1,0 +1,13 @@
+name = "MARS"
+spice_name = "MARS BARYCENTER"
+mu_km3_s2 = 42828.375214
+radius_km = 3389.5
+soi_radius_km = 577000.0
+default_parking_altitude_km = 400.0
+surface_gravity_m_s2 = 3.71
+mass_kg = 6.4171e+23
+
+[atmosphere]
+exists = true
+scale_height_km = 11.1
+surface_density_kg_m3 = 0.02

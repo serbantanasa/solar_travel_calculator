@@ -1,0 +1,8 @@
+[package]
+name = "solar_propulsion"
+version = "0.1.0"
+edition = "2024"
+license = "Unlicense"
+description = "Propulsion and vehicle models"
+
+[dependencies]

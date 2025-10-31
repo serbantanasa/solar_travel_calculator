@@ -1,10 +1,11 @@
 use std::sync::{Mutex, OnceLock};
 
+use solar_travel_calculator::config::{load_planets, load_vehicle_configs};
 use solar_travel_calculator::mission::MissionConfig;
 use solar_travel_calculator::mission::arrival::{AerobrakingOption, ArrivalConfig, plan_arrival};
 use solar_travel_calculator::mission::departure::{DepartureConfig, plan_departure};
 use solar_travel_calculator::mission::interplanetary::{InterplanetaryConfig, plan_interplanetary};
-use solar_travel_calculator::scenario::{load_planets, load_vehicles};
+use solar_travel_calculator::transfer::vehicle;
 
 fn guard() -> &'static Mutex<()> {
     static GUARD: OnceLock<Mutex<()>> = OnceLock::new();
@@ -16,7 +17,7 @@ fn ensure_kernels_or_skip() -> Option<()> {
         Ok(()) => Some(()),
         Err(solar_travel_calculator::ephemeris::EphemerisError::MissingKernel { path, .. }) => {
             eprintln!(
-                "Skipping phase tests: missing kernel at {}. Run `cargo run --bin fetch_spice` first.",
+                "Skipping phase tests: missing kernel at {}. Run `cargo run -p solar_cli --bin fetch_spice` first.",
                 path.display()
             );
             None
@@ -29,8 +30,12 @@ fn earth_mars_setup() -> (
     MissionConfig,
     solar_travel_calculator::mission::interplanetary::InterplanetaryPlan,
 ) {
-    let planets = load_planets("data/scenarios/planets.yaml").expect("planets yaml");
-    let vehicles = load_vehicles("data/scenarios/vehicles.yaml").expect("vehicles yaml");
+    let planets = load_planets("configs/bodies").expect("planets catalog");
+    let vehicles_cfg = load_vehicle_configs("configs/vehicles").expect("vehicles catalog");
+    let vehicles: Vec<_> = vehicles_cfg
+        .iter()
+        .map(|cfg| vehicle::from_config(cfg).expect("convert vehicle"))
+        .collect();
 
     let origin = planets.iter().find(|p| p.name == "EARTH").unwrap().clone();
     let destination = planets.iter().find(|p| p.name == "MARS").unwrap().clone();

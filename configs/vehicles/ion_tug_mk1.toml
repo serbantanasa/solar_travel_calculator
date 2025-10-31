@@ -1,0 +1,8 @@
+name = "Ion Tug Mk1"
+dry_mass_kg = 20000.0
+propellant_mass_kg = 80000.0
+
+[propulsion]
+type = "continuous"
+max_thrust_newtons = 3000.0
+isp_seconds = 4000.0

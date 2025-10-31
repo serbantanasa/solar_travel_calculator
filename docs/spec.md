@@ -1,107 +1,142 @@
-# Solar Travel Calculator Specification
+# Intra-Solar Transit Calculator — Design
 
-## 1. Mission and Scope
-- Deliver an open-source Rust toolkit that computes minimum-time trajectories for travel within the Solar System under a variety of propulsion models.
-- Begin with impulsive maneuvers (e.g., Lambert, Hohmann) as a correctness baseline, then extend toward continuous-thrust brachistochrone profiles inspired by the classical fastest-descent problem in gravity fields.[1]
-- Target fast, local execution with zero external runtime dependencies so the app can be installed via `cargo install` or distributed as a standalone binary.
+This document captures the streamlined architecture vision for the Solar Travel Calculator.  
+It focuses on modular crates, reproducible numerics, and a configuration-driven workflow so the CLI can stay thin while the libraries remain reusable in other binaries or services.
 
-## 2. Primary Use Cases
-- **Mission study**: Analysts compare travel times, delta-v budgets, and departure windows across multiple origin/destination pairs.
-- **Vehicle concept validation**: Engineers evaluate whether a propulsion system (e.g., high-Isp fusion concepts) satisfies mission timelines and constraints.[5]
-- **Education and outreach**: Students explore orbital mechanics numerically, with built-in scenario templates mirroring textbook examples and realistic benchmarks.
-- **Science fiction plausibility checks**: Authors test the feasibility of storylines against hard-physics models, leveraging the same data the aerospace community uses.[4][5]
+## 0) Objectives & Scope
+- Compute and compare heliocentric transfer trajectories between arbitrary solar-system bodies.
+- Cover impulsive (Lambert/Hohmann) and continuous-thrust (SEP, fusion-class) options under a shared configuration model.
+- Produce machine-consumable outputs (JSON/CSV) plus artifacts that can drive external visualization tools.
+- Maintain a documented, testable codebase with a living roadmap and CI coverage.
 
-## 3. Physics and Modeling Requirements
-### 3.1 Trajectory Classes
-- **Two-impulse transfers**: Provide Lambert solver support, returning feasible transfer orbits for a given time of flight.[2]
-- **Hohmann and bi-elliptic approximations**: Offer quick-look estimates for nearly-coplanar, circular orbits to validate solver output and enable regression tests.[3]
-- **Low-thrust / brachistochrone-style paths**: Model thrust-limited trajectories using continuous integration of dynamics, with configurable thrust magnitude and mass flow; treat the classical brachistochrone as a limiting case for infinite thrust ratio.[1]
-- **Patched-conic multi-leg itineraries**: Chain individual legs (planetary flybys or staging burns) with constraints on sphere-of-influence transitions.
+## 1) Workspace Architecture
 
-### 3.2 Dynamics and Forces
-- Start with two-body Keplerian dynamics for each leg; extend to include zonal harmonics (J2) or solar radiation pressure if needed for accuracy.
-- Include gravitational parameters (μ) for Sun, planets, and selectable dwarf planets or moons to support missions beyond inner planets.[4]
-- Define reference frames (heliocentric ecliptic, planet-centered inertial) and provide transformation utilities.
+```
+intrasolar/
+  crates/
+    core/          # Units, math, time, frames, reusable numerics
+    ephem_spice/   # SPICE kernel management & state sampling
+    importer/      # Offline kernel import/download helpers
+    orbits/        # Vector helpers, patched-conic escape/capture utilities
+    propulsion/    # Engine & power models shared by solvers
+    impulsive/     # Lambert solver + impulsive transfer estimators
+    lowthrust/     # Continuous-thrust analytical helpers
+    transfer/      # Mission orchestration facade (delegates to the crates above)
+    config/        # Config parsing/validation, schema helpers
+    export/        # JSON/CSV writers for downstream tooling
+    cli/           # Thin binary crate using the libraries only
+  data/spice/      # User-managed kernels, manifest metadata
+  configs/
+    bodies/        # Individual body TOML descriptors
+    vehicles/      # Individual vehicle TOML descriptors
+    runs/          # Scenario manifests
+  docs/            # Living specification & milestone notes
+  tests/           # Workspace-level integration tests
+```
 
-### 3.3 Constraints and Optimization
-- Enforce thrust magnitude, propellant limits, allowable acceleration (crew g-load), and arrival/departure windows.
-- Support objective functions: minimize time of flight, minimize propellant, or maximize arrival mass.
-- Provide hooks for optimizers (gradient-free search, direct transcription) to iterate on departure dates and thrust profiles.
+**Guiding principles**
+- *Library first*: All logic lives under `crates/*`; binaries are orchestration only.
+- *Composable*: Each crate exposes small, unit-tested functions that return typed results.
+- *Deterministic*: Document tolerances, kernel sets, and solver settings so runs are reproducible.
+- *Explicit units and frames*: No bare scalars—types encode meters, seconds, Newtons, frames, and timescales.
 
-## 4. Data and Ephemerides
-- **Ephemeris Kernels**: Use NASA NAIF SPICE kernels for high-precision state vectors; allow toggling between full kernels (e.g., DE440) and simplified analytic models for quick runs.[4]
-- **Constants**: Bundle CODATA values for astronomical unit, gravitational constants, planetary radii, and rotation rates. Allow overrides via config files.
-- **Scenario Definitions**: Store YAML/TOML templates describing mission endpoints, vehicle capabilities, and solver tolerances under `data/`.
-- **Time Standards**: Support conversion between UTC, TDB, and TAI as required by SPICE and mission designs.
+## 2) Core Concepts (`crates/core`)
+- Types: `Epoch`, `Duration`, `Vector3`, `StateVector`, `Mass`, `Thrust`, `Isp`, `Frame`, `TimeScale`.
+- Utilities: unit conversions, time-standard transforms (UTC↔TT↔TDB), interpolation helpers, numerical tolerances.
+- Error taxonomy shared across crates (e.g., `EphemerisGap`, `InvalidConfig`, `InfeasibleTransfer`).
 
-## 5. Software Architecture
-- **Core Library (`src/lib.rs`)**
-  - `astro::bodies`: Enumerations and data structs for celestial bodies, including GM, ephemeris identifiers, and frame metadata.
-  - `astro::ephemeris`: Trait-based loader supporting SPICE binary kernels and analytic approximations.
-  - `dynamics`: State propagation utilities (Keplerian propagation, Lambert solver wrapper, thrust integration).
-  - `optimizer`: Abstractions for search algorithms (grid scan, particle swarm, direct collocation).
-  - `mission`: High-level orchestration tying vehicle models, trajectories, constraints, and output products. Current scaffold sequences departure, interplanetary, and arrival legs so we can plug in impulsive or continuous propulsion models incrementally.
-- **CLI (`src/main.rs` & `src/bin/`)**
-  - Command groups: `plan` (single transfer), `scan` (window analysis), `simulate` (time-stepped propagation), `export` (trajectory to CSV/JSON).
-  - Flags to inject alternative ephemeris sets, solver tolerances, and output formatting.
-- **Data Layer (`data/`)**
-  - Example mission configs (Earth→Mars Hohmann, Earth→Saturn brachistochrone).
-  - Scenario catalogs for planets, moons, dwarf planets, and vehicle presets (including speculative drives).
-  - Placeholder ephemeris data for offline development.
-- **Testing (`tests/` and inline unit tests)**
-  - Integration tests that execute CLI scenarios via `assert_cmd`.
-  - Unit tests validating analytic solutions and invariants (energy conservation for Kepler problem).
+## 3) Ephemerides & Constants (`crates/ephem_spice`, `crates/importer`)
+- SPICE kernel manifest loader: validates presence of SPK/TPC/PCK/LSK and their coverage windows.
+- Sampling API: `state_of(target_id, epoch_tdb, frame) -> StateVector`.
+- Caching/interpolation policies for repeated access inside grid searches.
+- Helpers to down-select kernel sets (full vs “quick look”) without changing calling code.
+- Importer CLI helper (`solar_importer`) downloads the default kernel catalog and can be reused by other tooling.
 
-## 6. External Dependencies (Initial)
-- `nalgebra` or `ndarray` for vector math and matrices.
-- `clap` for CLI parsing.
-- `serde` + `serde_yaml`/`toml` for scenario serialization.
-- `thiserror` for structured error handling.
-- Optional: `argmin` for optimization routines, `approx` for tolerance-based float comparisons.
+## 4) Time, Frames, Units
+- Default dynamical frame: J2000 (ECLIPJ2000); provide transforms to body-fixed frames for parking orbits.
+- All state epochs expressed in TDB; CLI accepts UTC and converts centrally.
+- Scalar wrappers enforce SI units; conversions performed via explicit helper functions.
 
-## 7. Testing and Validation Strategy
-- **Analytic baselines**: Validate Lambert solver output against known Earth↔Mars Hohmann transfer times and delta-v (patched-conic solution).[3]
-- **Regression fixtures**: Save reference trajectories (state vectors over time) derived from SPICE data and ensure solver matches within tolerance.
-- **Property tests**: Assert time-reversal symmetry for Keplerian propagation and monotonic fuel consumption under thrust-limited integration.
-- **Cross-source comparison**: Compare generated state vectors against NASA/JPL trajectory browser or GMAT outputs when available.
-- **Continuous integration**: Run `cargo fmt`, `cargo clippy`, and `cargo test --all-features`; stage SPICE-dependent tests behind feature flags to keep CI lightweight.
+## 5) Configuration Model (`crates/config`)
+- **Bodies (`configs/bodies/*.toml`)**: NAIF IDs, frame, default parking orbit, optional inertial start states.
+- **Vehicles (`configs/vehicles/*.toml`)**: dry/prop mass, propulsion model, throttle limits, power scaling.
+- **Runs (`configs/runs/*.toml`)**: origin/destination, vehicle, ephemeris manifest, window grids, policy hooks.
+- Parser accepts directories of TOML files or legacy YAML and returns strongly typed structs with validation diagnostics (missing kernels, unsupported propulsion modes, etc.).
 
-## 8. Roadmap
-1. **v0.1 — Impulsive Core (in progress)**
-   - [x] Implement celestial body catalog (scenario YAML) and analytic helpers for SPICE access.
-   - [x] Add Lambert solver and mission CLI (`cargo run --bin mission`).
-   - [ ] Write regression tests for Earth↔Mars / Earth↔Venus impulsive (Lambert) transfers.
-2. **v0.2 — SPICE Integration (partially complete)**
-   - [x] Download baseline SPICE kernels and expose `state_vector`.
-   - [x] Add ephemeris-driven integration tests.
-   - [ ] Implement time conversions and window scanning utilities.
-3. **v0.3 — Continuous-Thrust Prototype**
-   - [x] Add thrust profile integrator (RK-based) with mass-flow coupling.
-   - [ ] Validate continuous solutions against analytic brachistochrone cases.
-   - [x] Integrate vehicle propulsion models (chemical, ion, nuclear) with mission phases.
-   - [ ] Replace straight-line cruise model with full heliocentric propagation:
-     - Implement a 3D state integrator that propagates spacecraft motion while the target body moves on its ephemeris.
-     - Introduce thrust steering logic (accel/decel and lateral guidance) appropriate for low-thrust optimisation.
-     - Provide target-tracking logic so the integrator converges on the moving destination state.
-     - Derive finite-burn durations from thrust and mass-flow to report accurate burn times in the CLI.
-4. **v0.4+ — Advanced Optimization**
-   - [ ] Search over multi-leg itineraries and planetary flybys.
-   - [ ] Expose user-defined objectives/constraints and possibly GUI/web frontends.
+## 6) Orbits & Impulsive Planning
+- Parking orbit builders convert named policies into inertial `StateVector`s at a given epoch.
+- Patched-conic helpers compute escape/capture Δv from parking orbit given `v_inf`.
+- Lambert solver (universal variables) supports prograde/retrograde and multi-rev branches.
+- Hohmann planner provides near-circular quick looks and regression baselines.
+- Porkchop sampler scans `(depart, tof)` grids, computing `Δv`, `C3`, `v_inf` budgets; exports raw grids plus valley annotations.
 
-## 9. Open Questions and Risks
-- **Ephemeris licensing and distribution**: Determine which SPICE kernels can be redistributed or whether the app should download them on demand.
-- **Heat and power modeling for high-thrust concepts**: Decide how far to model vehicle subsystems when evaluating speculative drives (e.g., Epstein-class fusion engines).[5]
-- **Performance vs. accuracy**: Balance precision of SPICE-driven propagation with the need for responsive, interactive calculations.
-- **User extensibility**: Define plugin or scripting interfaces (e.g., Lua, Python) without bloating the Rust binary.
-- **Validation data**: Identify authoritative datasets (e.g., NASA GMAT cases) to ground continuous-thrust solutions.
+## 7) Continuous-Thrust Planning (`crates/lowthrust`)
+- Mass-flow helpers: `mdot(thrust, isp)` and simple throttle envelopes bounded by power/acceleration limits.
+- Current solver: 1D bang-bang integration aligned with the chord between departure and arrival states (forward Euler with gravity projection and mass depletion).
+- Intended evolution: upgrade to higher-order integrators and allow scripted guidance/steering envelopes once physics modules mature.
+- Outputs: time-stamped telemetry (position along chord, velocity, mass), propellant usage, peak speed, TOF.
 
-## 10. Prior Art Review
-- The open-source calculators by jveigel provide quick brachistochrone estimates but rely on coarse orbital heuristics (e.g., linearized distance metrics and constant acceleration assumptions) that mis-represent true transfer requirements.[6] Use them only as qualitative inspiration; this project should ground its math in verifiable astrodynamics references and expose unit tests that fail for the oversimplifications observed there.
+## 8) Propulsion Models (`crates/propulsion`)
+- Chemical impulsive engines (Isp/thrust pairs for patched conics).
+- Solar-electric power-limited models (1/r² scaling, efficiency curves).
+- High-Isp constant-thrust “futuristic” envelope reusing low-thrust propagation.
+- Shared validation for throttle bounds, power availability, and mass budgets.
 
-## References
-1. Brachistochrone curve — Wikipedia. https://en.wikipedia.org/wiki/Brachistochrone_curve
-2. Lambert's problem — Wikipedia. https://en.wikipedia.org/wiki/Lambert%27s_problem
-3. Hohmann transfer orbit — Wikipedia. https://en.wikipedia.org/wiki/Hohmann_transfer_orbit
-4. NAIF/JPL SPICE System Overview. https://naif.jpl.nasa.gov/naif/aboutspice.html
-5. Project Rho, "The Expanse's Epstein Drive". https://www.projectrho.com/public_html/rocket/enginelist3.php#section_id--Fusion--(_Epstein_Drive_
-6. jveigel, "brachistochrone-calculators" (GitHub repository). https://github.com/jveigel/brachistochrone-calculators
+## 9) Search & Optimization (future)
+- Grid samplers for porkchops and low-thrust feasibility sweeps will migrate into a dedicated crate once implementations land.
+- Constraint evaluation helpers (max `v_inf`, propellant remaining, power draw).
+- Optional local refiners (Nelder–Mead / coordinate search) over departure epoch and throttle schedules.
+
+## 10) I/O & Visualization (`crates/export`)
+- JSON schemas for trajectory series, porkchop grids, and low-thrust samples (see §13) emitted by `export`.
+- CSV exporters for quick inspection and interoperability with Python notebooks.
+- Visualization prep hooks will move into a dedicated crate once plotting utilities are factored out of the CLI/tests.
+
+## 11) CLI (`crates/cli`)
+- Entry point: `cargo run -p solar_cli --bin <command> [...]`.
+- `fetch_spice`: download/import the default kernel catalog.
+- `mission`: plan a point-to-point mission using the TOML catalogs.
+- `porkchop`: produce impulsive transfer grids (CSV) and annotate Lambert branches.
+- `porkchop_plot`: render contour heatmaps from porkchop CSV output.
+- CLIs perform no business logic; they delegate to the library crates.
+
+## 12) Testing Strategy
+- **Unit tests** (crate-local): time conversions, SPICE sampling against reference values, orbit constructors, Lambert canonical cases, mass-flow invariants, optimizer constraints.
+- **Property/regression tests**: ensure porkchop minima drift stays within tolerances, continuous-thrust integrator energy drift when thrust=0, power-scaling invariants.
+- **Integration tests** (`tests/`): end-to-end Earth→Mars scenarios for both impulsive and SEP vehicles; fusion envelope quick run; JSON schema compliance.
+- **Golden artifacts**: archive representative JSON outputs and assert numeric drift within documented tolerances (e.g., Δv within 0.1 %, arrival `v_inf` within 0.05 km/s).
+- CI runs `cargo fmt`, `cargo clippy --workspace --all-targets --all-features`, unit + integration tests, optional `criterion` benchmarks on demand.
+
+## 13) Output Schemas (JSON)
+- **Trajectory**: metadata (run name, kernel versions, frame/time scale) and per-entity state arrays with optional throttle/mass telemetry, plus summary metrics (TOF, Δv, prop usage, arrival `v_inf`).
+- **Porkchop grid**: axes arrays (`depart_utc`, `tof_days`), nested cell metrics (`dv_kms`, `c3_km2s2`, `vinf_arr_kms`, feasibility flags) and optional valley picks.
+- **Low-thrust map**: samples annotated with feasibility, propellant usage, arrival mismatch, heuristic score; can be filtered for plotting favorability maps.
+- JSON writers include schema version tags so downstream tools can validate compatibility.
+
+## 14) Documentation & Milestones
+- `docs/spec.md`: living design (this document).
+- `docs/milestones.md`: roadmap checkpoints—use “M0 skeleton” through “M8 polishing” structure with acceptance criteria and links to reference tests/artifacts.
+- Each crate maintains a focused `README.md` summarizing scope, main APIs, and key tests.
+- ADR-style notes captured in `docs/decisions/` for major trade-offs (e.g., integrator choices, kernel policy, optimizer selection).
+
+## 15) Migration Notes (current repository → workspace)
+- Break the existing monolithic crate into the workspace layout incrementally:
+  1. Extract unit/epoch/math utilities into `crates/core`; re-export from the main crate temporarily.
+  2. Move SPICE loading code into `ephem_spice`; update call sites.
+  3. Introduce `transfer` (phase-A umbrella) while keeping public APIs stable via a top-level facade; split into `impulsive`, `lowthrust`, `propulsion`, and `orbits` once APIs solidify.
+  4. Wire search policies into a dedicated crate (future), configs into `config`, and writers into `export`, then cut the CLI over to the new crates.
+- Maintain compatibility layers during the transition (feature flag or re-exports) to avoid breaking existing tests/clients.
+
+## 16) Extensibility
+- Gravity assists: future `crates/flybys` adding patched-conic swing-by targeting and B-plane calculations.
+- Plane-change budgeting: extend porkchops to 3-D grids with inclination penalties.
+- Atmospheric capture: plug-in aerobrake/aerocapture estimators once atmospheric models are available.
+- Uncertainty analysis: Monte-Carlo sampling wrappers for ephemeris and propulsion dispersions.
+- GUI front-end: optional `egui`/`wgpu` viewer consuming the exported JSON without polluting solver crates.
+
+## 17) References
+1. Lambert's problem — https://en.wikipedia.org/wiki/Lambert%27s_problem  
+2. Hohmann transfer orbit — https://en.wikipedia.org/wiki/Hohmann_transfer_orbit  
+3. NAIF SPICE documentation — https://naif.jpl.nasa.gov  
+4. Sims-Flanagan low-thrust transcription — NASA Technical Report (2001-210866)  
+5. Project Rho fusion drive survey — https://www.projectrho.com/public_html/rocket/enginelist3.php

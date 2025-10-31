@@ -1,0 +1,13 @@
+name = "HAUMEA"
+spice_name = "HAUMEA"
+mu_km3_s2 = 200.0
+radius_km = 816.0
+soi_radius_km = 25000.0
+default_parking_altitude_km = 50.0
+surface_gravity_m_s2 = 0.7
+mass_kg = 4.01e+21
+
+[atmosphere]
+exists = false
+scale_height_km = 0.0
+surface_density_kg_m3 = 0.0
