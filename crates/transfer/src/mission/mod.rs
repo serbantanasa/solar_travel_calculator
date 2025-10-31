@@ -3,6 +3,7 @@
 pub mod arrival;
 pub mod departure;
 pub mod interplanetary;
+pub mod porkchop;
 
 use self::arrival::{ArrivalConfig, ArrivalPlan};
 use self::departure::{DepartureConfig, DeparturePlan};

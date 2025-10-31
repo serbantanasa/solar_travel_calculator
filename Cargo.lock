@@ -1878,6 +1878,8 @@ version = "0.1.0"
 name = "solar_transfer"
 version = "0.1.0"
 dependencies = [
+ "serde",
+ "serde_json",
  "solar_config",
  "solar_core",
  "solar_ephem_spice",

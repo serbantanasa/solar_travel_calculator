@@ -27,7 +27,10 @@ fn scenario_vehicles_include_epstein_drive() {
         .unwrap();
     match epstein.propulsion {
         solar_travel_calculator::propulsion::PropulsionMode::Continuous { isp_seconds, .. } => {
-            assert!(isp_seconds > 1.0e5, "Epstein drive should have enormous ISP");
+            assert!(
+                isp_seconds > 1.0e5,
+                "Epstein drive should have enormous ISP"
+            );
         }
         _ => panic!("Epstein drive must be continuous"),
     }

@@ -67,40 +67,41 @@ pub fn plan_departure(
     };
     let tof_seconds = (arrival_et - departure_et).abs().max(1.0);
 
-    let lambert_result = lambert::solve(
-        cruise.departure_state.position_km,
+    let planet_velocity = cruise.departure_state.velocity_km_s;
+    let mut best_v_infinity: Option<f64> = None;
+
+    let arrival_positions = [
         cruise.arrival_state.position_km,
-        tof_seconds,
-        MU_SUN,
-        true,
-    )
-    .or_else(|_| {
-        let perturbed = [
+        [
             cruise.arrival_state.position_km[0] + 1.0,
             cruise.arrival_state.position_km[1] + 1.0,
             cruise.arrival_state.position_km[2],
-        ];
-        lambert::solve(
-            cruise.departure_state.position_km,
-            perturbed,
-            tof_seconds,
-            MU_SUN,
-            true,
-        )
-    });
+        ],
+    ];
 
-    let planet_velocity = cruise.departure_state.velocity_km_s;
-    let v_infinity = match lambert_result {
-        Ok((lambert_v1, _)) => {
-            let v_infinity_vec = [
-                lambert_v1[0] - planet_velocity[0],
-                lambert_v1[1] - planet_velocity[1],
-                lambert_v1[2] - planet_velocity[2],
-            ];
-            norm3(&v_infinity_vec)
+    for arrival_position in &arrival_positions {
+        for &short in &[true, false] {
+            if let Ok((lambert_v1, _)) = lambert::solve(
+                cruise.departure_state.position_km,
+                *arrival_position,
+                tof_seconds,
+                MU_SUN,
+                short,
+            ) {
+                let v_infinity_vec = [
+                    lambert_v1[0] - planet_velocity[0],
+                    lambert_v1[1] - planet_velocity[1],
+                    lambert_v1[2] - planet_velocity[2],
+                ];
+                let vinf_mag = norm3(&v_infinity_vec);
+                if best_v_infinity.map_or(true, |current| vinf_mag < current) {
+                    best_v_infinity = Some(vinf_mag);
+                }
+            }
         }
-        Err(_) => config.required_v_infinity.unwrap_or(0.0),
-    };
+    }
+
+    let v_infinity = best_v_infinity.unwrap_or_else(|| config.required_v_infinity.unwrap_or(0.0));
 
     let delta_v = escape_delta_v(origin.mu_km3_s2, parking_radius, v_infinity);
 
