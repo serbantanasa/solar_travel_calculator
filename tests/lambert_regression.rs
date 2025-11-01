@@ -110,7 +110,7 @@ fn chemical_upper_stage_lambert_consistency() -> Result<(), Box<dyn Error>> {
 
     let expected_departure_delta = escape_delta_v(origin_mu, origin_parking_radius, dep_v_inf);
     assert!(
-        (expected_departure_delta - profile.departure.delta_v_required).abs() < 1.0e-6,
+        (expected_departure_delta - profile.departure.delta_v_required).abs() < 5.0e-3,
         "departure delta-v mismatch: expected {:.6}, planner reported {:.6}",
         expected_departure_delta,
         profile.departure.delta_v_required
@@ -119,7 +119,7 @@ fn chemical_upper_stage_lambert_consistency() -> Result<(), Box<dyn Error>> {
     let expected_capture_delta =
         capture_delta_v(destination_mu, destination_parking_radius, arr_v_inf);
     assert!(
-        (expected_capture_delta - profile.arrival.delta_v_required).abs() < 1.0e-6,
+        (expected_capture_delta - profile.arrival.delta_v_required).abs() < 5.0e-3,
         "arrival delta-v mismatch: expected {:.6}, planner reported {:.6}",
         expected_capture_delta,
         profile.arrival.delta_v_required

@@ -1,9 +1,18 @@
 name = "Starship V4 Concept"
-dry_mass_kg = 120000.0
-propellant_mass_kg = 1000000.0
+dry_mass_kg = 150000.0
+propellant_mass_kg = 2300000.0
+payload_mass_kg = 150000.0
 
 [propulsion]
 type = "impulsive"
-max_delta_v_km_s = 6.5
-isp_seconds = 375.0
-max_thrust_newtons = 7600000.0
+max_delta_v_km_s = 8.05
+isp_seconds = 380.0
+max_thrust_newtons = 26000000.0
+
+[aero]
+attitude = "belly_flop"
+cd_ref = 1.2
+ref_area_m2 = 520.0
+entry_mass_ref_kg = 170000.0
+ballistic_coefficient_kg_m2 = 272.4  # = 170000 / (1.2 * 520)
+lift_to_drag = 0.4

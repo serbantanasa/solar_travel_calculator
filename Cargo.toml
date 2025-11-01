@@ -12,6 +12,7 @@ members = [
     "crates/importer",
     "crates/orbits",
     "crates/cli",
+    "crates/aerobrake",
 ]
 resolver = "2"
 
@@ -26,6 +27,7 @@ solar_lowthrust = { path = "crates/lowthrust" }
 solar_propulsion = { path = "crates/propulsion" }
 solar_importer = { path = "crates/importer" }
 solar_orbits = { path = "crates/orbits" }
+solar_aerobrake = { path = "crates/aerobrake" }
 
 [package]
 name = "solar_travel_calculator"
@@ -49,6 +51,7 @@ solar_lowthrust = { workspace = true }
 solar_propulsion = { workspace = true }
 solar_importer = { workspace = true }
 solar_orbits = { workspace = true }
+solar_aerobrake = { workspace = true }
 
 [dev-dependencies]
 assert_cmd = "2.0"

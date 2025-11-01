@@ -696,10 +696,19 @@ pub fn analyze_departure(
         }
 
         if sample.depart_et >= departure_et {
-            forward_candidate = Some(sample.clone());
-            break;
+            match &mut forward_candidate {
+                Some(best) if sample.dv_total_km_s >= best.dv_total_km_s => {}
+                _ => forward_candidate = Some(sample.clone()),
+            }
+        } else {
+            match &mut backward_candidate {
+                Some(best) if sample.dv_total_km_s <= best.dv_total_km_s => {
+                    *best = sample.clone();
+                }
+                None => backward_candidate = Some(sample.clone()),
+                _ => {}
+            }
         }
-        backward_candidate = Some(sample.clone());
     }
 
     let recommended = forward_candidate

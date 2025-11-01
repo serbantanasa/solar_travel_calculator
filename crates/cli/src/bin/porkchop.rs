@@ -1,9 +1,9 @@
 use anyhow::anyhow;
 use clap::Parser;
 use solar_travel_calculator::config::{PlanetConfig, load_planets, load_vehicle_configs};
-use solar_travel_calculator::ephemeris;
+use solar_travel_calculator::ephemeris::{self, StateVector};
 use solar_travel_calculator::export::porkchop as export_porkchop;
-use solar_travel_calculator::propulsion::{PropulsionMode, Vehicle};
+use solar_travel_calculator::propulsion::PropulsionMode;
 use solar_travel_calculator::transfer::mission::porkchop::{
     self as porkchop_calc, PorkchopPath, PorkchopRequest, TimeWindow,
 };
@@ -70,14 +70,6 @@ struct Cli {
     /// Vehicle name from the vehicle catalog to size burns/propellant.
     #[arg(long, default_value = "Ion Tug Mk1")]
     vehicle: String,
-}
-
-const MU_SUN: f64 = 1.327_124_400_18e11; // km^3 / s^2
-
-struct EphemerisSample {
-    et: f64,
-    utc: String,
-    state: Option<StateVector>,
 }
 
 fn main() -> anyhow::Result<()> {

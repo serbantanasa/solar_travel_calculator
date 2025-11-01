@@ -186,11 +186,13 @@ fn optimize_impulsive_arrival(
         baseline_days = 200.0;
     }
 
-    let mut min_days = (baseline_days * 0.5).max(30.0);
-    let mut max_days = (baseline_days * 1.8).max(min_days + 30.0).min(1_500.0);
-    let mut step_days = ((max_days - min_days) / 120.0).max(2.0);
+    let mut min_days = (baseline_days * 0.8).max(30.0);
+    let mut max_days = (baseline_days * 1.2).max(min_days + 20.0).min(1_500.0);
+    let mut step_days = ((max_days - min_days) / 120.0).max(1.0);
 
-    let mut best: Option<(f64, StateVector, f64, f64)> = None;
+    let score_tolerance = 0.2;
+    let tof_penalty_weight = 0.05;
+    let mut best: Option<(f64, StateVector, f64, f64, f64)> = None;
 
     for _ in 0..3 {
         let mut tof_days = min_days;
@@ -226,14 +228,31 @@ fn optimize_impulsive_arrival(
             }
 
             if let Some(score) = best_score_for_candidate {
+                let penalty = tof_penalty_weight * f64::abs(tof_days - baseline_days);
+                let score_eff = score + penalty;
                 match &mut best {
                     Some(existing) => {
-                        if score < existing.3 {
-                            *existing = (arrival_et, arrival_state.clone(), tof_seconds, score);
+                        if score_eff < existing.4 - score_tolerance
+                            || (f64::abs(score_eff - existing.4) <= score_tolerance
+                                && tof_seconds < existing.2)
+                        {
+                            *existing = (
+                                arrival_et,
+                                arrival_state.clone(),
+                                tof_seconds,
+                                score,
+                                score_eff,
+                            );
                         }
                     }
                     None => {
-                        best = Some((arrival_et, arrival_state.clone(), tof_seconds, score));
+                        best = Some((
+                            arrival_et,
+                            arrival_state.clone(),
+                            tof_seconds,
+                            score,
+                            score_eff,
+                        ));
                     }
                 }
             }
@@ -241,7 +260,7 @@ fn optimize_impulsive_arrival(
             tof_days += step_days;
         }
 
-        if let Some((_, _, best_tof_seconds, _)) = best {
+        if let Some((_, _, best_tof_seconds, _, _)) = best {
             let best_days = best_tof_seconds / SECONDS_PER_DAY;
             min_days = (best_days - step_days * 4.0).max(30.0);
             max_days = (best_days + step_days * 4.0)
@@ -255,5 +274,5 @@ fn optimize_impulsive_arrival(
         }
     }
 
-    Ok(best.map(|(et, state, tof, _)| (et, state, tof)))
+    Ok(best.map(|(et, state, tof, _, _)| (et, state, tof)))
 }

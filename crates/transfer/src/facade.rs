@@ -1,16 +1,18 @@
 //! Re-exported APIs for consumers of the transfer crate.
 
-pub use crate::mission::arrival::{AerobrakingOption, ArrivalConfig, ArrivalError, ArrivalPlan};
+pub use crate::mission::arrival::{
+    AerobrakeReport, AerobrakingOption, ArrivalConfig, ArrivalError, ArrivalPlan,
+};
 pub use crate::mission::departure::{DepartureConfig, DepartureError, DeparturePlan};
 pub use crate::mission::interplanetary::{
     InterplanetaryConfig, InterplanetaryError, InterplanetaryPlan,
 };
 pub use crate::mission::{MissionConfig, MissionError, MissionProfile, plan_mission};
-pub use solar_propulsion::{PropulsionMode, Vehicle};
+pub use solar_propulsion::{PropulsionMode, Vehicle, VehicleAero};
 
 pub mod vehicle {
-    use solar_config::{VehicleConfig, VehiclePropulsionConfig};
-    use solar_propulsion::{PropulsionMode, Vehicle};
+    use solar_config::{VehicleAeroConfig, VehicleConfig, VehiclePropulsionConfig};
+    use solar_propulsion::{PropulsionMode, Vehicle, VehicleAero};
     use thiserror::Error;
 
     /// Errors surfaced when selecting or converting vehicles.
@@ -50,11 +52,14 @@ pub mod vehicle {
             }
         };
 
+        let aero = config.aero.as_ref().map(to_vehicle_aero);
+
         Ok(Vehicle {
             name: config.name.clone(),
             dry_mass_kg: config.dry_mass_kg,
             propellant_mass_kg: config.propellant_mass_kg,
             propulsion,
+            aero,
         })
     }
 
@@ -81,5 +86,17 @@ pub mod vehicle {
         };
 
         from_config(chosen)
+    }
+
+    fn to_vehicle_aero(config: &VehicleAeroConfig) -> VehicleAero {
+        VehicleAero {
+            attitude: config.attitude.clone(),
+            cd_ref: config.cd_ref,
+            ref_area_m2: config.ref_area_m2,
+            ref_diameter_m: config.ref_diameter_m,
+            entry_mass_ref_kg: config.entry_mass_ref_kg,
+            ballistic_coefficient_kg_m2: config.ballistic_coefficient_kg_m2,
+            lift_to_drag: config.lift_to_drag,
+        }
     }
 }

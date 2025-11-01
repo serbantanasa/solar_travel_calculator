@@ -4,6 +4,7 @@
 //! ephemeris data, and optimal trajectory solvers. Keeping this logic in
 //! a library crate lets multiple front-ends (CLI, GUI, web) share it.
 
+pub use solar_aerobrake as aerobrake;
 pub use solar_config as config;
 pub use solar_core as core;
 pub use solar_ephem_spice as ephemeris;

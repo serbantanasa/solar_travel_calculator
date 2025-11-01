@@ -1800,6 +1800,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "solar_aerobrake"
+version = "0.1.0"
+dependencies = [
+ "thiserror",
+]
+
+[[package]]
 name = "solar_cli"
 version = "0.1.0"
 dependencies = [
@@ -1880,6 +1887,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
+ "solar_aerobrake",
  "solar_config",
  "solar_core",
  "solar_ephem_spice",
@@ -1900,6 +1908,7 @@ dependencies = [
  "csv",
  "plotters",
  "predicates",
+ "solar_aerobrake",
  "solar_config",
  "solar_core",
  "solar_ephem_spice",

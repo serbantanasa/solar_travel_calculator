@@ -1,7 +1,7 @@
 use super::Cli;
 use anyhow::anyhow;
-use solar_core::constants::G0;
 use solar_travel_calculator::config::PlanetConfig;
+use solar_travel_calculator::core::constants::G0;
 use solar_travel_calculator::ephemeris::{self, StateVector};
 use solar_travel_calculator::export::continuous as export_continuous;
 use solar_travel_calculator::lowthrust::{

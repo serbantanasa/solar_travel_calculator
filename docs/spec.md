@@ -134,7 +134,17 @@ intrasolar/
 - Uncertainty analysis: Monte-Carlo sampling wrappers for ephemeris and propulsion dispersions.
 - GUI front-end: optional `egui`/`wgpu` viewer consuming the exported JSON without polluting solver crates.
 
-## 17) References
+## 17) Aerobraking Enhancements
+- Mission arrival planner now runs a ballistic aerobrake integrator using the exponential atmosphere model from body configs. Drag is integrated along the hyperbolic approach to compute `Δv_drag`, peak dynamic pressure, and peak deceleration.
+- Periapsis targeting for full aerobrakes sweeps a search window and picks the altitude that minimises the post-entry hyperbolic excess while respecting safety caps (default: 80 kPa, 4 g). Partial aerobrakes honour user-specified periapsis altitudes.
+- Vehicles may specify a constant lift-to-drag ratio; lift is folded into an effective ballistic coefficient (`β/√(1 + (L/D)^2)`), extending upper-atmosphere dwell without making the solver fully 3D.
+- Mission CLI prints a per-phase Δv summary so users can distinguish propulsive burns from aerothermal energy removal.
+
+## 18) Outstanding Follow-ups
+- **Direct landing arrival mode** — add a landing-oriented arrival solver that reuses the aerobrake pass then models powered descent instead of circularising into the default parking orbit.
+- **Impulsive propellant tracking** — apply the rocket equation after each impulsive burn (or upgrade to finite-duration burns) so `propellant_used_kg` reflects reality and subsequent phases inherit the correct mass.
+
+## 19) References
 1. Lambert's problem — https://en.wikipedia.org/wiki/Lambert%27s_problem  
 2. Hohmann transfer orbit — https://en.wikipedia.org/wiki/Hohmann_transfer_orbit  
 3. NAIF SPICE documentation — https://naif.jpl.nasa.gov  

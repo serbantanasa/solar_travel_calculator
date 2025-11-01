@@ -1,9 +1,19 @@
 name = "Chemical Upper Stage"
 dry_mass_kg = 10000.0
 propellant_mass_kg = 60000.0
+payload_mass_kg = 5000.0
 
 [propulsion]
 type = "impulsive"
-max_delta_v_km_s = 4.5
-isp_seconds = 320.0
+isp_seconds = 348.0
 max_thrust_newtons = 1500000.0
+max_delta_v_km_s = 5.493  # = 348*9.80665*ln((10k+60k+5k)/(10k+5k))/1000
+
+# --- Aerodynamics / Ballistic Coefficient ---
+[aero]
+attitude = "end_on"
+cd_ref = 1.0
+ref_diameter_m = 3.70
+ref_area_m2 = 10.753               # π*(3.70/2)^2
+entry_mass_ref_kg = 15000.0        # dry + payload (no prop) for aerobrake skim
+ballistic_coefficient_kg_m2 = 1396.0  # = 15000 / (1.0 * 10.753)

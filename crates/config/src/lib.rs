@@ -21,6 +21,8 @@ pub struct PlanetConfig {
     pub mass_kg: f64,
     pub atmosphere: Option<AtmosphereConfig>,
     #[serde(default)]
+    pub entry_target: Option<EntryTargetConfig>,
+    #[serde(default)]
     pub kernel_dependencies: Vec<String>,
 }
 
@@ -32,13 +34,24 @@ pub struct AtmosphereConfig {
     pub surface_density_kg_m3: f64,
 }
 
+/// Entry targeting preferences for aerobraking passes.
+#[derive(Debug, Deserialize, Clone)]
+pub struct EntryTargetConfig {
+    pub target_periapsis_altitude_m: f64,
+    pub atm_exit_altitude_m: f64,
+}
+
 /// Vehicle configuration parsed from scenario catalogs.
 #[derive(Debug, Deserialize, Clone)]
 pub struct VehicleConfig {
     pub name: String,
     pub dry_mass_kg: f64,
     pub propellant_mass_kg: f64,
+    #[serde(default)]
+    pub payload_mass_kg: Option<f64>,
     pub propulsion: VehiclePropulsionConfig,
+    #[serde(default)]
+    pub aero: Option<VehicleAeroConfig>,
 }
 
 /// Propulsion configuration in scenario manifests.
@@ -61,6 +74,23 @@ pub enum VehiclePropulsionConfig {
     },
     #[serde(other)]
     Unsupported,
+}
+
+/// Aerodynamic properties used for atmospheric entry / aerobraking.
+#[derive(Debug, Deserialize, Clone)]
+pub struct VehicleAeroConfig {
+    #[serde(default)]
+    pub attitude: Option<String>,
+    pub cd_ref: f64,
+    pub ref_area_m2: f64,
+    #[serde(default)]
+    pub ref_diameter_m: Option<f64>,
+    #[serde(default)]
+    pub entry_mass_ref_kg: Option<f64>,
+    #[serde(default)]
+    pub ballistic_coefficient_kg_m2: Option<f64>,
+    #[serde(default)]
+    pub lift_to_drag: Option<f64>,
 }
 
 /// Errors that can occur while loading configuration files.

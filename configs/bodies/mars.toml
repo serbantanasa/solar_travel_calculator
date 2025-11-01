@@ -11,3 +11,7 @@ mass_kg = 6.4171e+23
 exists = true
 scale_height_km = 11.1
 surface_density_kg_m3 = 0.02
+
+[entry_target]
+target_periapsis_altitude_m = 30000.0
+atm_exit_altitude_m = 200000.0

@@ -111,10 +111,18 @@ fn main() -> anyhow::Result<()> {
         aerobraking: Some(match cli.aerobrake {
             AerobrakeMode::None => AerobrakingOption::Disabled,
             AerobrakeMode::Partial => AerobrakingOption::Partial {
-                periapsis_altitude_km: destination.default_parking_altitude_km,
+                periapsis_altitude_km: destination
+                    .entry_target
+                    .as_ref()
+                    .map(|t| t.target_periapsis_altitude_m / 1_000.0)
+                    .unwrap_or(destination.default_parking_altitude_km),
             },
             AerobrakeMode::Full => AerobrakingOption::Full {
-                periapsis_altitude_km: destination.default_parking_altitude_km,
+                periapsis_altitude_km: destination
+                    .entry_target
+                    .as_ref()
+                    .map(|t| t.target_periapsis_altitude_m / 1_000.0)
+                    .unwrap_or(destination.default_parking_altitude_km),
             },
         }),
     };
@@ -172,6 +180,33 @@ fn main() -> anyhow::Result<()> {
         "Arrival burn   : Δv = {:.3} km/s",
         profile.arrival.delta_v_required
     );
+
+    let aerobrake_dv = profile
+        .arrival
+        .aerobrake_report
+        .as_ref()
+        .map(|r| r.delta_v_drag_km_s)
+        .unwrap_or(0.0);
+    let total_propulsive_dv = profile.departure.delta_v_required + profile.arrival.delta_v_required;
+    let total_delta_v = total_propulsive_dv + aerobrake_dv;
+
+    println!(
+        "Δv budget      : propulsive = {:.3} km/s, aerobrake = {:.3} km/s, total = {:.3} km/s",
+        total_propulsive_dv, aerobrake_dv, total_delta_v
+    );
+
+    if let Some(report) = &profile.arrival.aerobrake_report {
+        println!(
+            "Aerobrake      : Δv_drag = {:.3} km/s, v_inf_post = {:.3} km/s",
+            report.delta_v_drag_km_s, report.final_vinf_km_s
+        );
+        println!(
+            "               : peak q = {:.1} Pa, peak accel = {:.2} m/s², periapsis = {:.1} km",
+            report.peak_dynamic_pressure_pa,
+            report.peak_deceleration_m_s2,
+            report.periapsis_altitude_m / 1_000.0
+        );
+    }
 
     let total_dv_km_s = profile.departure.delta_v_required + profile.arrival.delta_v_required;
     let rpark_dep_km = origin.radius_km + origin_altitude_km;
@@ -352,10 +387,15 @@ fn print_window_suggestion(
         suggestion.baseline.dv_total_km_s
     );
     let delta_days = (suggestion.recommended.depart_et - departure_et) / 86_400.0;
+    let depart_phrase = if delta_days.abs() < 0.5 {
+        "same departure day".to_string()
+    } else {
+        describe_offset(delta_days)
+    };
     println!(
         "      Suggestion: depart {} ({}) and arrive {} with Δv_total ≈ {:.2} km/s.",
         suggestion.recommended.depart_utc,
-        describe_offset(delta_days),
+        depart_phrase,
         suggestion.recommended.arrive_utc,
         suggestion.recommended.dv_total_km_s
     );

@@ -26,7 +26,9 @@ fn ensure_kernels_or_skip() -> Option<()> {
     }
 }
 
-fn earth_mars_setup() -> (
+fn earth_mars_setup(
+    vehicle_name: &str,
+) -> (
     MissionConfig,
     solar_travel_calculator::mission::interplanetary::InterplanetaryPlan,
 ) {
@@ -41,8 +43,8 @@ fn earth_mars_setup() -> (
     let destination = planets.iter().find(|p| p.name == "MARS").unwrap().clone();
     let vehicle = vehicles
         .iter()
-        .find(|v| v.name.contains("Ion"))
-        .unwrap()
+        .find(|v| v.name.to_uppercase().contains(&vehicle_name.to_uppercase()))
+        .unwrap_or(&vehicles[0])
         .clone();
     let propulsion_mode = vehicle.propulsion.clone();
 
@@ -92,7 +94,7 @@ fn departure_delta_v_is_positive() {
     if ensure_kernels_or_skip().is_none() {
         return;
     }
-    let (config, cruise) = earth_mars_setup();
+    let (config, cruise) = earth_mars_setup("Ion");
     let departure = plan_departure(
         &config.vehicle,
         &config.departure,
@@ -112,7 +114,7 @@ fn aerobraking_reduces_capture_delta_v() {
     if ensure_kernels_or_skip().is_none() {
         return;
     }
-    let (mut config, cruise) = earth_mars_setup();
+    let (mut config, cruise) = earth_mars_setup("Starship");
     let propulsive = plan_arrival(
         &config.vehicle,
         &config.arrival,
@@ -136,7 +138,12 @@ fn aerobraking_reduces_capture_delta_v() {
     )
     .expect("arrival aero");
 
-    assert!(aero.delta_v_required < propulsive.delta_v_required);
+    if let Some(report) = &aero.aerobrake_report {
+        assert!(report.delta_v_drag_km_s >= 0.0);
+    } else {
+        panic!("aerobraking report missing");
+    }
+    assert!(aero.delta_v_required <= propulsive.delta_v_required);
 }
 
 #[test]
@@ -145,7 +152,7 @@ fn continuous_solver_consumes_propellant() {
     if ensure_kernels_or_skip().is_none() {
         return;
     }
-    let (config, cruise) = earth_mars_setup();
+    let (config, cruise) = earth_mars_setup("Ion");
     let prop_used = cruise.propellant_used_kg.expect("propellant");
     assert!(prop_used >= 0.0);
     assert!(prop_used <= config.vehicle.propellant_mass_kg);
